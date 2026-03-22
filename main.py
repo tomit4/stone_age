@@ -2,6 +2,7 @@ import json
 import random
 import re
 import sys
+from datetime import datetime
 
 
 class Item:
@@ -295,8 +296,34 @@ class Player:
             print("Sadly, you do not have the materials to make a knife yet.")
             return False
 
+    def get_inputs(self):
+        return self.inputs
+
     def set_inputs(self, input):
         self.inputs.append(input)
+
+    def save_stats(self):
+        file_name = "stone_age.json"
+
+        try:
+            with open(file_name, "r") as file:
+                data = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            data = {"players": []}
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        data["players"].append(
+            {
+                "name": self.get_name(),
+                "wins": self.get_wins(),
+                "inputs": self.get_inputs(),
+                "date_time_played": timestamp,
+            }
+        )
+
+        with open(file_name, "w") as file:
+            json.dump(data, file, indent=4)
 
 
 def display_title():
@@ -325,6 +352,8 @@ def parse_input(player, map):
     valid_inputs = [
         "q",
         "quit",
+        "h",
+        "help",
         "l",
         "look",
         "t",
@@ -346,8 +375,11 @@ def parse_input(player, map):
             continue
 
         if user_input == "q" or user_input == "quit":
+            player.save_stats()
             break
-        if user_input == "l" or user_input == "look":
+        elif user_input == "h" or user_input == "help":
+            print_help()
+        elif user_input == "l" or user_input == "look":
             player.look_around(map)
         elif user_input == "t" or user_input == "take":
             player.take_item(map)
@@ -366,6 +398,7 @@ def parse_input(player, map):
                     return "restart"  # signal to restart the game
                 else:
                     print("Thanks for playing!")
+                    player.save_stats()
                     sys.exit()
         elif user_input in valid_directions:
             if map.set_player_position(user_input):
