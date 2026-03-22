@@ -147,8 +147,9 @@ class Map:
 
 
 class Player:
-    def __init__(self, map):
-        self.map = map
+    def __init__(self):
+        self.name = ""
+        self.map = None
         self.inventory = {
             "dirt": 0,
             "flint": 0,
@@ -161,6 +162,8 @@ class Player:
             "flint_knife": 0,
             "obsidian_knife": 0,
         }
+        self.inputs = []
+        self.wins = 0
 
     def get_name(self):
         return self.name
@@ -178,6 +181,19 @@ class Player:
             else:
                 print("sorry, that name is not allowed.")
         self.name = player_name
+
+    def set_map(self, map):
+        self.map = map
+
+    def increment_wins(self):
+        self.wins += 1
+
+    def get_wins(self):
+        return self.wins
+
+    def reset_inventory(self):
+        for key in self.inventory:
+            self.inventory[key] = 0
 
     def look_around(self, map):
         room = map.get_player_position()
@@ -218,9 +234,6 @@ class Player:
 
     def remove_inventory(self, item):
         self.inventory[item] -= 1
-
-    #  def get_inventory(self):
-    #  return self.inventory
 
     def look_inventory(self):
         print("In your inventory, you see the following:")
@@ -282,6 +295,9 @@ class Player:
             print("Sadly, you do not have the materials to make a knife yet.")
             return False
 
+    def set_inputs(self, input):
+        self.inputs.append(input)
+
 
 def display_title():
     print(
@@ -306,10 +322,30 @@ def print_help():
 
 def parse_input(player, map):
     valid_directions = ["north", "south", "east", "west", "n", "s", "e", "w"]
+    valid_inputs = [
+        "q",
+        "quit",
+        "l",
+        "look",
+        "t",
+        "take",
+        "i",
+        "inventory",
+        "k",
+        "knap",
+        "m",
+        "make",
+    ] + valid_directions
 
     while True:
         user_input = str(input("What would you like to do?: ")).lower()
-        if user_input == "quit" or user_input == "q":
+        if user_input in valid_inputs:
+            player.set_inputs(user_input)
+        else:
+            print_help()
+            continue
+
+        if user_input == "q" or user_input == "quit":
             break
         if user_input == "l" or user_input == "look":
             player.look_around(map)
@@ -323,6 +359,8 @@ def parse_input(player, map):
             won = player.make_knife()
             if won:
                 print("\nCongratulations! You have conquered the Stone Age!")
+                player.increment_wins()
+                print(f"Total Wins: {player.get_wins()}")
                 play_again = input("Would you like to play again? (y/n): ").lower()
                 if play_again == "y":
                     return "restart"  # signal to restart the game
@@ -332,18 +370,16 @@ def parse_input(player, map):
         elif user_input in valid_directions:
             if map.set_player_position(user_input):
                 player.look_around(map)
-        else:
-            print_help()
-            continue
 
 
 def main():
+    player = Player()
+    player.set_name()
     while True:
         map = Map()
         map.set_map()
-        player = Player(map)
+        player.set_map(map)
 
-        player.set_name()
         print(f"Welcome to Stone Age, {player.get_name()}!")
         print(
             "Start your journey by looking around, type 'l' to look around or 'h' for help:"
@@ -352,6 +388,7 @@ def main():
         result = parse_input(player, map)
         if result == "restart":
             print("\n--- Restarting the game ---\n")
+            player.reset_inventory()
             continue
         else:
             break
