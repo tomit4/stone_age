@@ -5,7 +5,7 @@ import sys
 
 
 class Item:
-    def __init__(self):
+    def __init__(self, description=""):
         self.potential_items = [
             "a pile of dirt",
             "a piece of flint",
@@ -14,7 +14,7 @@ class Item:
             "a rock of sandstone",
             "a wooden stick",
         ]
-        self.description = ""
+        self.description = description
 
     def set_item(self):
         self.description = random.choice(self.potential_items)
@@ -37,7 +37,6 @@ class Room:
     def set_random_terrain(self):
         self.terrain = random.choice(self.potential_terrains)
 
-    # TODO: After loop, ensure room has at least one item not currently in room
     def set_random_items(self):
         for _ in range(random.randint(1, 5)):
             item = Item()
@@ -46,6 +45,9 @@ class Room:
 
     def get_items(self):
         return self.items
+
+    def add_item(self, item_to_add):
+        self.items.append(item_to_add)
 
     def remove_item(self, item_to_remove):
         for item in self.items:
@@ -71,6 +73,43 @@ class Map:
                 room.set_random_items()
                 row.append(room)
             self.topography.append(row)
+
+        # Checks if Game Map makes game unwinnable
+        flint_count = 0
+        obsidian_count = 0
+        stick_count = 0
+        for row in self.topography:
+            for room in row:
+                for item in room.get_items():
+                    split_item = item.get_item().split(" ")
+                    last_word = split_item[-1]
+                    if "flint" == last_word:
+                        flint_count += 1
+                    elif "obsidian" == last_word:
+                        obsidian_count += 1
+                    elif "stick" == last_word:
+                        stick_count += 1
+
+        while flint_count < 2 and obsidian_count < 2:
+            rand_row = random.randint(0, 2)
+            rand_col = random.randint(0, 2)
+            room = self.topography[rand_row][rand_col]
+            if flint_count <= obsidian_count:
+                item = Item("a piece of flint")
+                room.add_item(item)
+                flint_count += 1
+            else:
+                item = Item("a chunk of obsidian")
+                room.add_item(item)
+                obsidian_count += 1
+
+        while stick_count < 1:
+            rand_row = random.randint(0, 2)
+            rand_col = random.randint(0, 2)
+            room = self.topography[rand_row][rand_col]
+            item = Item("a wooden stick")
+            room.add_item(item)
+            stick_count += 1
 
     def set_player_position(self, direction):
         row = self.position["first_index"]
@@ -238,8 +277,10 @@ class Player:
                     print("Making a obsidian knife...")
                     self.remove_inventory("obsidian_knife_blade")
                     self.set_inventory("obsidian_knife")
+            return True
         else:
             print("Sadly, you do not have the materials to make a knife yet.")
+            return False
 
 
 def display_title():
@@ -279,7 +320,15 @@ def parse_input(player, map):
         elif user_input == "k" or user_input == "knap":
             player.knap_stone()
         elif user_input == "m" or user_input == "make":
-            player.make_knife()
+            won = player.make_knife()
+            if won:
+                print("\nCongratulations! You have conquered the Stone Age!")
+                play_again = input("Would you like to play again? (y/n): ").lower()
+                if play_again == "y":
+                    return "restart"  # signal to restart the game
+                else:
+                    print("Thanks for playing!")
+                    sys.exit()
         elif user_input in valid_directions:
             if map.set_player_position(user_input):
                 player.look_around(map)
@@ -289,17 +338,23 @@ def parse_input(player, map):
 
 
 def main():
-    map = Map()
-    map.set_map()
-    player = Player(map)
+    while True:
+        map = Map()
+        map.set_map()
+        player = Player(map)
 
-    player.set_name()
-    print(f"Welcome to Stone Age, {player.get_name()}!")
-    print(
-        "Start your journey by looking around, type 'l' to look around or 'h' for help:"
-    )
+        player.set_name()
+        print(f"Welcome to Stone Age, {player.get_name()}!")
+        print(
+            "Start your journey by looking around, type 'l' to look around or 'h' for help:"
+        )
 
-    parse_input(player, map)
+        result = parse_input(player, map)
+        if result == "restart":
+            print("\n--- Restarting the game ---\n")
+            continue
+        else:
+            break
 
 
 if __name__ == "__main__":
