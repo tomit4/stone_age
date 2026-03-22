@@ -260,13 +260,13 @@ class Player:
         has_materials_to_knap = False
 
         for key, value in self.inventory.items():
-            if key == "flint" and value == 2:
+            if key == "flint" and value >= 2:
                 print("Knapping flint blade...")
                 has_materials_to_knap = True
                 self.remove_inventory(key)
                 self.remove_inventory(key)
                 self.set_inventory("flint_knife_blade")
-            elif key == "obsidian" and value == 2:
+            elif key == "obsidian" and value >= 2:
                 has_materials_to_knap = True
                 print("Knapping obsidian blade...")
                 self.remove_inventory(key)
@@ -287,23 +287,23 @@ class Player:
         has_enough_obsidian_blades = False
 
         for key, value in self.inventory.items():
-            if key == "flint_knife_blade" and value == 1:
+            if key == "flint_knife_blade" and value >= 1:
                 has_enough_flint_blades = True
-            elif key == "obsidian_knife_blade" and value == 1:
+            elif key == "obsidian_knife_blade" and value >= 1:
                 has_enough_obsidian_blades = True
 
         for key, value in self.inventory.items():
-            if key == "stick" and value == 1:
+            if key == "stick" and value >= 1:
                 if has_enough_flint_blades or has_enough_obsidian_blades:
                     has_materials_to_make_knife = True
 
         if has_materials_to_make_knife:
             for key, value in self.inventory.items():
-                if key == "flint_knife_blade" and value == 1:
+                if key == "flint_knife_blade" and value >= 1:
                     print("Making a flint knife...")
                     self.remove_inventory("flint_knife_blade")
                     self.set_inventory("flint_knife")
-                elif key == "obsidian_knife_blade" and value == 1:
+                elif key == "obsidian_knife_blade" and value >= 1:
                     print("Making a obsidian knife...")
                     self.remove_inventory("obsidian_knife_blade")
                     self.set_inventory("obsidian_knife")
