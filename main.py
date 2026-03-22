@@ -4,7 +4,13 @@ import re
 import sys
 from datetime import datetime
 
+# Stone Age Text Adventure Game
+# A simple text-based game where the player explores a grid,
+# collects materials, and crafts a knife to win.
+# Player actions and stats are saved to a JSON file.
 
+
+# Represents an item that can appear in a room
 class Item:
     def __init__(self, description=""):
         self.potential_items = [
@@ -24,6 +30,7 @@ class Item:
         return self.description
 
 
+# Represents a location containing terrain and items
 class Room:
     def __init__(self):
         self.potential_terrains = [
@@ -59,12 +66,14 @@ class Room:
         return self.terrain
 
 
+# Represents the 3x3 game world and player movement
 class Map:
     def __init__(self):
         self.topography = []
         self.position = {"first_index": 1, "second_index": 1}
         self.directions = ["north", "south", "east", "west", "n", "s", "e", "w"]
 
+    # Generates a 3x3 grid of rooms and ensures required items exist to win
     def set_map(self):
         for _ in range(3):
             row = []
@@ -91,6 +100,7 @@ class Map:
                     elif "stick" == last_word:
                         stick_count += 1
 
+        # Ensures enough materials exist on Gampe Map to make game winnable
         while flint_count < 2 and obsidian_count < 2:
             rand_row = random.randint(0, 2)
             rand_col = random.randint(0, 2)
@@ -112,6 +122,7 @@ class Map:
             room.add_item(item)
             stick_count += 1
 
+    # Moves the player in the given direction if within map bounds
     def set_player_position(self, direction):
         row = self.position["first_index"]
         col = self.position["second_index"]
@@ -147,6 +158,7 @@ class Map:
         return room
 
 
+# Stores player data (name, inventory, inputs, wins) and actions
 class Player:
     def __init__(self):
         self.name = ""
@@ -192,6 +204,7 @@ class Player:
     def get_wins(self):
         return self.wins
 
+    # Resets Inventory between playthroughs
     def reset_inventory(self):
         for key in self.inventory:
             self.inventory[key] = 0
@@ -206,6 +219,7 @@ class Player:
         else:
             print("There is nothing on the ground.")
 
+    # Allows the player to pick up an item from the current room
     def take_item(self, map):
         room = map.get_player_position()
         items = room.get_items()
@@ -241,6 +255,7 @@ class Player:
         for key, value in self.inventory.items():
             print(f" - {value} of {key}")
 
+    # Converts 2 flint or obsidian into a knife blade
     def knap_stone(self):
         has_materials_to_knap = False
 
@@ -265,6 +280,7 @@ class Player:
                 "Sorry, you need at least 2 chunks of flint or 2 chunks of obsidian to knap a blade..."
             )
 
+    # Combines a blade and stick to create a knife (win condition)
     def make_knife(self):
         has_materials_to_make_knife = False
         has_enough_flint_blades = False
@@ -302,6 +318,7 @@ class Player:
     def set_inputs(self, input):
         self.inputs.append(input)
 
+    # Saves player session data (name, inputs, wins, timestamp) to JSON file
     def save_stats(self):
         file_name = "stone_age.json"
 
@@ -326,12 +343,14 @@ class Player:
             json.dump(data, file, indent=4)
 
 
+# Displays the game title and introduction
 def display_title():
     print(
         "Welcome to Stone Age!\nA Text Adventure Game where you can travel around looking for stones and branches!\nThe point of the game is to knap a stone, find a stick, and make a knife!"
     )
 
 
+# Displays available player commands
 def print_help():
     print("Help message goes here")
     print("Player options:")
@@ -347,6 +366,7 @@ def print_help():
     print("You can always type 'q' or 'quit' to quit.")
 
 
+# Main game loop: processes player commands and actions
 def parse_input(player, map):
     valid_directions = ["north", "south", "east", "west", "n", "s", "e", "w"]
     valid_inputs = [
@@ -405,6 +425,7 @@ def parse_input(player, map):
                 player.look_around(map)
 
 
+# Controls overall game flow and replay loop
 def main():
     player = Player()
     player.set_name()
